@@ -64,7 +64,7 @@ lidar.enablePointCloud()
 # and there are LIDAR_ANGLE_BINS. An easy way to generate the
 # array that contains all the angles is to use linspace from
 # the numpy package.
-myangles = np.linspace((LIDAR_ANGLE_RANGE)/2, -(LIDAR_ANGLE_RANGE)/2, LIDAR_ANGLE_BINS)
+myangles = np.linspace(LIDAR_ANGLE_RANGE/2, -LIDAR_ANGLE_RANGE/2, LIDAR_ANGLE_BINS)
 lidar_sensor_readings = []
 
 
@@ -90,13 +90,8 @@ while robot.step(SIM_TIMESTEP) != -1:
     # Come up with a way to turn the robot pose (in world coordinates)
     # into coordinates on the map. Draw a red dot using display.drawPixel()
     # wherehere the robot moves.
-    # mypose_x = math.cos(pose_theta)*pose_x - math.sin(pose_theta)*pose_y
-    # mypose_y = math.sin(pose_theta)*pose_x + math.cos(pose_theta)*pose_y 
+    
     display.setColor(0xFF0000)
-    # mypose_x = mypose_x * 300   
-    # mypose_y = mypose_y * 300
-    # print ("here are mypose_x ", mypose_x)
-    # print ("here are mypose_y ", mypose_y)
     display.drawPixel(int(pose_x*300),int(pose_y*300))
     
     # display.drawLine(int x1, int y1, intx2, y2)
@@ -110,32 +105,36 @@ while robot.step(SIM_TIMESTEP) != -1:
     # rx and ry into world coordinates wx and wy. This lab uses
     # the Webots coordinate system (except that we use Y instead of Z).
     # The arena is 1x1m2 and its origin is in the top left of the arena.
-    myx = [] 
-    myy = []
-    for i in range(len(lidar_sensor_readings)):
-        if(lidar_sensor_readings[i] == float('inf')):
-            continue
+    free_space = []
+    obstacle = []
+    for i in range(0, len(lidar_sensor_readings)):
+    
+        rho = lidar_sensor_readings[i]
+        alpha = myangles[i]
+    
+        if(rho == float('inf')):
+            rx = LIDAR_SENSOR_MAX_RANGE * 100 + pose_x
+            ry = LIDAR_SENSOR_MAX_RANGE * 100 + pose_y
+            wx = (math.cos(pose_theta)*rx + math.sin(pose_theta)*ry) + pose_x
+            wy = (-math.sin(pose_theta)*rx + math.cos(pose_theta)*ry) + pose_y
+            free_space.append((pose_x,pose_y,wx,wy))
         else:
-            y = lidar_sensor_readings[i]*math.cos(myangles[i])
-            x = lidar_sensor_readings[i]*math.sin(myangles[i])
-            x = math.cos(pose_theta)*x - math.sin(pose_theta)*y + pose_x
-            y = math.sin(pose_theta)*x + math.cos(pose_theta)*y + pose_y    
-        myx.append(x)
-        myy.append(y) 
+            ry = rho*math.cos(myangles[i])
+            rx = rho*math.sin(myangles[i])
+            wx = (math.cos(pose_theta)*rx + math.sin(pose_theta)*ry) + pose_x
+            wy = (-math.sin(pose_theta)*rx + math.cos(pose_theta)*ry) + pose_y    
+            obstacle.append((wx,wy)) 
     
     ##### Part 4: Draw the obstacle and free space pixels on the map
     
-    for i in range(len(myx)):
-        if(myx[i] == float('inf') and myy[i] == float('inf')):
-            display.setColor(0xFFFFFF)
-            display.drawLine(int(pose_x*300), int(pose_y*300), int((pose_x+0.5)*300), int((pose_y+0.5)*300))
-        else:
-            display.setColor(0x0000FF)
-            display.drawPixel(int(myx[i]*300), int(myy[i]*300))
     
-          
-
-    
+    #for point in free_space:
+        #display.setColor(0xFFFFFF)
+        #display.drawLine(int(point[0]*300), int(point[1]*300), int(point[2]*300), int(point[3]*300))
+           
+    for point in obstacle:
+        display.setColor(0x0000FF)
+        display.drawPixel(int(point[0]*300), int(point[1]*300))    
  
 
     
@@ -183,4 +182,4 @@ while robot.step(SIM_TIMESTEP) != -1:
     pose_theta += (dsr-dsl)/EPUCK_AXLE_DIAMETER
     
     # Feel free to uncomment this for debugging
-    #print("X: %f Y: %f Theta: %f " % (pose_x,pose_y,pose_theta))
+    print("X: %f Y: %f Theta: %f " % (pose_x,pose_y,pose_theta))
