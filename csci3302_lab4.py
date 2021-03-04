@@ -2,6 +2,8 @@
 
 # You may need to import some classes of the controller module. Ex:
 #  from controller import Robot, Motor, DistanceSensor
+# fix: white line
+# fix: error with blue dots
 import math
 import time
 import random
@@ -62,7 +64,8 @@ lidar.enablePointCloud()
 # and there are LIDAR_ANGLE_BINS. An easy way to generate the
 # array that contains all the angles is to use linspace from
 # the numpy package.
-
+myangles = np.linspace((LIDAR_ANGLE_RANGE)/2, -(LIDAR_ANGLE_RANGE)/2, LIDAR_ANGLE_BINS)
+lidar_sensor_readings = []
 
 
 #### End of Part 1 #####
@@ -87,8 +90,16 @@ while robot.step(SIM_TIMESTEP) != -1:
     # Come up with a way to turn the robot pose (in world coordinates)
     # into coordinates on the map. Draw a red dot using display.drawPixel()
     # wherehere the robot moves.
+    # mypose_x = math.cos(pose_theta)*pose_x - math.sin(pose_theta)*pose_y
+    # mypose_y = math.sin(pose_theta)*pose_x + math.cos(pose_theta)*pose_y 
+    display.setColor(0xFF0000)
+    # mypose_x = mypose_x * 300   
+    # mypose_y = mypose_y * 300
+    # print ("here are mypose_x ", mypose_x)
+    # print ("here are mypose_y ", mypose_y)
+    display.drawPixel(int(pose_x*300),int(pose_y*300))
     
-
+    # display.drawLine(int x1, int y1, intx2, y2)
     
     
     ##### Part 3: Convert Lidar data into world coordinates
@@ -98,13 +109,29 @@ while robot.step(SIM_TIMESTEP) != -1:
     # hits the object in the robot coordinate system. Then convert
     # rx and ry into world coordinates wx and wy. This lab uses
     # the Webots coordinate system (except that we use Y instead of Z).
-    # The arena is 1x1m2 and its origin is in the top left of the arena. 
-    
-
-    
+    # The arena is 1x1m2 and its origin is in the top left of the arena.
+    myx = [] 
+    myy = []
+    for i in range(len(lidar_sensor_readings)):
+        if(lidar_sensor_readings[i] == float('inf')):
+            continue
+        else:
+            y = lidar_sensor_readings[i]*math.cos(myangles[i])
+            x = lidar_sensor_readings[i]*math.sin(myangles[i])
+            x = math.cos(pose_theta)*x - math.sin(pose_theta)*y + pose_x
+            y = math.sin(pose_theta)*x + math.cos(pose_theta)*y + pose_y    
+        myx.append(x)
+        myy.append(y) 
     
     ##### Part 4: Draw the obstacle and free space pixels on the map
- 
+    
+    for i in range(len(myx)):
+        if(myx[i] == float('inf') and myy[i] == float('inf')):
+            display.setColor(0xFFFFFF)
+            display.drawLine(int(pose_x*300), int(pose_y*300), int((pose_x+0.5)*300), int((pose_y+0.5)*300))
+        else:
+            display.setColor(0x0000FF)
+            display.drawPixel(int(myx[i]*300), int(myy[i]*300))
     
           
 
