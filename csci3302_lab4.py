@@ -112,18 +112,20 @@ while robot.step(SIM_TIMESTEP) != -1:
         rho = lidar_sensor_readings[i]
         alpha = myangles[i]
     
-        if(rho != float('inf')):
-            ry = rho*math.cos(alpha)
-            rx = rho*math.sin(alpha)
-            wx = (math.cos(pose_theta)*rx + math.sin(pose_theta)*ry) + pose_x
-            wy = (-math.sin(pose_theta)*rx + math.cos(pose_theta)*ry) + pose_y
+        if(rho == float('inf')):
+             rho = LIDAR_SENSOR_MAX_RANGE
+        
+        ry = rho*math.cos(alpha)
+        rx = rho*math.sin(alpha)
+        wx = (math.cos(pose_theta)*rx + math.sin(pose_theta)*ry) + pose_x
+        wy = (-math.sin(pose_theta)*rx + math.cos(pose_theta)*ry) + pose_y
             
-            if(wx < 0 or wx > 1):
-                free_space.append((pose_x, pose_y, wx, wy))
-            elif(wy < 0 or wy > 1):
-                free_space.append((pose_x, pose_y, wx, wy))
-            else:    
-                obstacle.append((wx,wy)) 
+        if(wx < 0 or wx > 1):
+            free_space.append((pose_x, pose_y, wx, wy))
+        elif(wy < 0 or wy > 1):
+            free_space.append((pose_x, pose_y, wx, wy))
+        else:    
+            obstacle.append((wx,wy))
     
     ##### Part 4: Draw the obstacle and free space pixels on the map
     
