@@ -91,8 +91,8 @@ while robot.step(SIM_TIMESTEP) != -1:
     # into coordinates on the map. Draw a red dot using display.drawPixel()
     # wherehere the robot moves.
     
-    display.setColor(0xFF0000)
-    display.drawPixel(int(pose_x*300),int(pose_y*300))
+    # Moved this code to the bottom of the loop to not be covered
+    # up by the free space lines
     
     # display.drawLine(int x1, int y1, intx2, y2)
     
@@ -112,31 +112,32 @@ while robot.step(SIM_TIMESTEP) != -1:
         rho = lidar_sensor_readings[i]
         alpha = myangles[i]
     
-        if(rho == float('inf')):
-            rx = LIDAR_SENSOR_MAX_RANGE * 100 + pose_x
-            ry = LIDAR_SENSOR_MAX_RANGE * 100 + pose_y
+        if(rho != float('inf')):
+            ry = rho*math.cos(alpha)
+            rx = rho*math.sin(alpha)
             wx = (math.cos(pose_theta)*rx + math.sin(pose_theta)*ry) + pose_x
             wy = (-math.sin(pose_theta)*rx + math.cos(pose_theta)*ry) + pose_y
-            free_space.append((pose_x,pose_y,wx,wy))
-        else:
-            ry = rho*math.cos(myangles[i])
-            rx = rho*math.sin(myangles[i])
-            wx = (math.cos(pose_theta)*rx + math.sin(pose_theta)*ry) + pose_x
-            wy = (-math.sin(pose_theta)*rx + math.cos(pose_theta)*ry) + pose_y    
-            obstacle.append((wx,wy)) 
+            
+            if(wx < 0 or wx > 1):
+                free_space.append((pose_x, pose_y, wx, wy))
+            elif(wy < 0 or wy > 1):
+                free_space.append((pose_x, pose_y, wx, wy))
+            else:    
+                obstacle.append((wx,wy)) 
     
     ##### Part 4: Draw the obstacle and free space pixels on the map
     
     
-    #for point in free_space:
-        #display.setColor(0xFFFFFF)
-        #display.drawLine(int(point[0]*300), int(point[1]*300), int(point[2]*300), int(point[3]*300))
+    for point in free_space:
+        display.setColor(0xFFFFFF)
+        display.drawLine(int(point[0]*300), int(point[1]*300), int(point[2]*300), int(point[3]*300))
            
     for point in obstacle:
         display.setColor(0x0000FF)
         display.drawPixel(int(point[0]*300), int(point[1]*300))    
  
-
+    display.setColor(0xFF0000)
+    display.drawPixel(int(pose_x*300),int(pose_y*300))
     
     # DO NOT MODIFY THE FOLLOWING CODE
     #####################################################
@@ -182,4 +183,4 @@ while robot.step(SIM_TIMESTEP) != -1:
     pose_theta += (dsr-dsl)/EPUCK_AXLE_DIAMETER
     
     # Feel free to uncomment this for debugging
-    print("X: %f Y: %f Theta: %f " % (pose_x,pose_y,pose_theta))
+    #print("X: %f Y: %f Theta: %f " % (pose_x,pose_y,pose_theta))
